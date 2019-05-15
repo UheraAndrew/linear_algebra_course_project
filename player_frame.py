@@ -3,12 +3,10 @@ from time import time as now
 import cv2
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-
+from config import max_players_number
 from twod_transform import transform
 from yolo_player_detect import detect
 
-
-max_players_number = 0
 
 __players1 = []
 __players2 = []
@@ -25,16 +23,19 @@ def _inside_field_v2(box, field_coords):
     return polygon.contains(point)
 
 
-def __update(in_data, field_width, field_height):  # length and height in meters
+def __update(in_data, field_width, field_height):
     x, y, field = in_data
-    y = (1 - y) * field_height
-
+    y_n = None
+    x_n = None
     if field == "L":
-        x = (field_width // 2) - x * (field_width // 2)
+        y_n = (1 - y) * field_height
+        x_n = (field_width // 2) * (1 - x)
     else:
-        x = (field_width // 2) * (1 + x)
-
-    return [x, y]
+        y_n = (1 - y) * field_height
+        if y_n < 0:
+            y_n = field_height + y_n * 2
+        x_n = (field_width // 2) + x * (field_width // 2)
+    return [x_n, y_n]
 
 
 def update_players_coordinates(old_boxes, new_boxes):
@@ -102,17 +103,18 @@ def find__players(frame1, field_cords1, frame2, field_cords2):
 
 
 def render_2d_field(img, field1, field2):
-    for i in __players1:  # left
+    # len(field[0]) == width
+    # len(field) == height
+    for i in __players1:
         cor = [i[0] + i[2] // 2, i[1] + i[3]]
-        i_c = transform(cor, field1)
+        i_c = transform(cor, field1, 0)
         i_u = __update(i_c + ["L"], len(img[0]), len(img))
         x, y = i_u
         x, y = round(x), round(y)
         cv2.rectangle(img, (x, y), (x + 25, y + 25), (255, 0, 0), 4)
-
-    for i in __players2:  # right
+    for i in __players2:
         cor = [i[0] + i[2] // 2, i[1] + i[3]]
-        i_c = transform(cor, field2, "R")
+        i_c = transform(cor, field2, 1)
         i_u = __update(i_c + ["R"], len(img[0]), len(img))
         x, y = i_u
         x, y = round(x), round(y)

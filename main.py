@@ -1,18 +1,18 @@
 import cv2
-import player_frame
-from user_points_input import get_field_main_points
 import numpy as np
-vid1 = cv2.VideoCapture("static/data/left.mp4")
-vid2 = cv2.VideoCapture("static/data/right.mp4")
+
+import player_frame
+from config import left_field_side_video_path, right_field_side_video_path
+from user_points_input import get_field_main_points
+
+vid1 = cv2.VideoCapture(left_field_side_video_path)
+vid2 = cv2.VideoCapture(right_field_side_video_path)
+
 success1, image1 = vid1.read()
 success2, image2 = vid2.read()
 
 field_coords1 = get_field_main_points(image1, "Select four point of field")
-
 field_coords2 = get_field_main_points(image2, "Select four point of field")
-
-detected_players = 0
-player_frame.max_players_number = 14
 
 while success1 and success2:
     success1, image1 = vid1.read()
@@ -32,4 +32,3 @@ while success1 and success2:
 
 vid1.release()
 vid2.release()
-
